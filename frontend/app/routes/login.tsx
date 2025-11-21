@@ -1,7 +1,7 @@
 import { useAuth } from "../providers/AuthProvider";
 import { useNavigate } from "react-router";
 
-export const meta = () => [{ title: "Login • TON Streak" }];
+export const meta = () => [{ title: "Login Web3 Streak" }];
 
 export default function Login() {
   const { walletAddress, token, connectWallet, authenticate, loading } = useAuth();
@@ -19,7 +19,7 @@ export default function Login() {
     <section className="space-y-4 max-w-md">
       <h1 className="text-2xl font-semibold">Login</h1>
       <p className="text-gray-600 dark:text-gray-300">
-        Authenticate with your TON wallet.
+        Authenticate with your wallet.
       </p>
       {/* TODO: Connect wallet, request nonce, sign, and POST /api/auth */}
       <div className="space-y-3">

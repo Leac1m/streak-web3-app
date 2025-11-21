@@ -11,7 +11,7 @@ const router = Router();
  * @swagger
  * /auth/nonce:
  *   post:
- *     summary: Generate a one-time nonce for TON wallet authentication
+ *     summary: Generate a one-time nonce for SUI wallet authentication
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -35,7 +35,7 @@ router.post("/nonce", nonceRateLimit, validate({ body: Joi.object({ walletAddres
  * @swagger
  * /auth:
  *   post:
- *     summary: Authenticate user via TON wallet signature
+ *     summary: Authenticate user via SUI wallet signature
  *     tags: [Auth]
  *     requestBody:
  *       required: true

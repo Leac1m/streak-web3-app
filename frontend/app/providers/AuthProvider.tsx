@@ -6,12 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import {
-  CHAIN,
-  TonConnectUIProvider,
-  useTonConnectUI,
-  useTonWallet,
-} from "@tonconnect/ui-react";
+
 import { api, getToken, setToken } from "../lib/api";
 
 // Types
@@ -39,28 +34,17 @@ export type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function AuthInnerProvider({ children }: { children: React.ReactNode }) {
-  const wallet = useTonWallet();
-  const [tonConnectUI] = useTonConnectUI();
-
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Track wallet connection state
-  useEffect(() => {
-    const addr = wallet?.account?.address || null;
-    setWalletAddress(addr);
-  }, [wallet]);
-
   const connectWallet = useCallback(() => {
-    tonConnectUI.openModal();
-  }, [tonConnectUI]);
+  }, []);
 
   const disconnectWallet = useCallback(() => {
-    tonConnectUI.disconnect();
     setWalletAddress(null);
-  }, [tonConnectUI]);
+  }, []);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -99,19 +83,10 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
         walletAddress,
       });
 
-      const textData = {
-        type: "text" as const,
-        text: nonce,
-        network: CHAIN.TESTNET, // MAINNET = '-239', TESTNET = '-3'
-        from: walletAddress,
-      };
-
-      const { signature } = await tonConnectUI.signData(textData);
-      console.log("Signed:", signature);
 
       // 2) Ask user to sign the nonce (placeholder: TODO integrate sign feature)
-      // NOTE: Implement TON sign once enabled. For now, we pass nonce back as message
-      // const signature = "0kkkkk"; // TODO: use tonConnectUI to create a signature when available
+      // NOTE: Implement SUI sign once enabled. For now, we pass nonce back as message
+      const signature = "0kkkkk"; // TODO: use signTransacture to create a signature when available
 
       // 3) Submit auth
       const result = await api.post<{ token: string; user: UserProfile }>(
@@ -163,9 +138,7 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-    <TonConnectUIProvider manifestUrl="/tonconnect-manifest.json">
       <AuthInnerProvider>{children}</AuthInnerProvider>
-    </TonConnectUIProvider>
   );
 }
 

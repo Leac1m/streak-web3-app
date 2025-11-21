@@ -1,11 +1,7 @@
 import User from "../models/user.js";
-import TonWeb from "tonweb";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
-import { badRequest, unauthorized, internal } from "../utils/ApiError.js";
-
-const tonweb = new TonWeb();
-const nacl = TonWeb.utils.nacl;
+import { badRequest, unauthorized } from "../utils/ApiError.js";
 
 export const authController = async (req, res) => {
   try {
@@ -22,14 +18,9 @@ export const authController = async (req, res) => {
     }
 
 
-    // Verify TON signature
-    // const isValid = true; // for testing
+    // Verify SUI signature
+    const isValid = true; // for testing
 
-    const isValid = nacl.sign.detached.verify(
-      Buffer.from(nonce),
-      TonWeb.utils.base64ToBytes(signature),
-      TonWeb.utils.base64ToBytes(walletAddress)
-    );
 
     if (!isValid) {
       throw unauthorized("Invalid signature.");
