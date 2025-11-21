@@ -1,4 +1,6 @@
 import { Link, NavLink } from "react-router";
+import { TonConnectButton } from '@tonconnect/ui-react';
+
 
 export default function NavBar() {
   const linkBase =
@@ -36,6 +38,7 @@ export default function NavBar() {
           >
             Login
           </NavLink>
+          <TonConnectButton />
         </nav>
       </div>
     </header>

@@ -9,6 +9,7 @@ import {
 import NavBar from "./components/NavBar";
 
 import type { Route } from "./+types/root";
+import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -44,15 +45,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <div>
-      {/* App Header */}
+    <TonConnectUIProvider
+      manifestUrl="https://tonconnect-sdk-demo-dapp.vercel.app/tonconnect-manifest.json" >
       <Header />
-      {/* Page Content */}
       <main className="pt-16 p-4 container mx-auto min-h-[calc(100dvh-4rem)]">
         <Outlet />
       </main>
       <Footer />
-    </div>
+    </TonConnectUIProvider>
   );
 }
 
