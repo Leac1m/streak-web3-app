@@ -8,18 +8,20 @@ ENV NODE_ENV=production
 RUN corepack enable
 
 FROM base AS deps
-# Copy only manifest files for faster caching
+# Copy only manifest files for faster caching (include lockfile for reproducibility)
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# Install only production dependencies
+RUN pnpm install --frozen-lockfile --prod
 
 FROM base AS prod
-# Copy installed deps from deps stage
+# Copy installed prod deps from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
-# Copy source
+# Copy source (only JS and necessary files for runtime)
 COPY src ./src
-# Copy env example (not real secrets)
 COPY .env.example ./
+# Use non-root user provided by node image for security
+USER node
 EXPOSE 5000
 CMD ["node", "src/server.js"]
 
