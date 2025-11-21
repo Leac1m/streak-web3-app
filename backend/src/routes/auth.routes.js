@@ -70,6 +70,6 @@ router.post("/nonce", nonceRateLimit, validate({ body: Joi.object({ walletAddres
  *       400:
  *         description: Missing fields or invalid signature
  */
-router.post("/", authRateLimit, validate({ body: Joi.object({ walletAddress: schemas.walletAddress, signature: schemas.signature, nonce: schemas.nonce }) }), authController);
+router.post("/", authRateLimit, validate({ body: Joi.object({ walletAddress: schemas.walletAddress, signature: schemas.signature, nonce: schemas.nonce, publicKey: schemas.publicKey, message: schemas.message, domain: schemas.domain, timestamp: schemas.timestamp }) }), authController);
 
 export default router;
