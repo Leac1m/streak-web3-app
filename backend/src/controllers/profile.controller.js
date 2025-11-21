@@ -1,12 +1,11 @@
+import { unauthorized } from "../utils/ApiError.js";
+
 export const getProfileController = async (req, res) => {
   try {
     const user = req.user;
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
+      throw unauthorized();
     }
 
     return res.status(200).json({
@@ -20,6 +19,9 @@ export const getProfileController = async (req, res) => {
     });
   } catch (err) {
     console.error("Profile error:", err);
-    return res.status(500).json({ message: "Server error while fetching profile." });
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ success: false, message: err.message, details: err.details });
+    }
+    return res.status(500).json({ success: false, message: "Server error while fetching profile." });
   }
 };

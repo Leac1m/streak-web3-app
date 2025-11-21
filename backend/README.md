@@ -93,6 +93,48 @@ Compose overrides host references so backend reaches services by internal names:
 | ------------------------- | ----------------------------------------- |
 | `scripts/health-check.js` | Connectivity validation for Mongo & Redis |
 
+## Error Handling & Validation
+
+All API responses follow a consistent error shape:
+
+```
+{
+	"success": false,
+	"message": "Human readable summary",
+	"details": [
+		{ "message": "\"walletAddress\" is required", "path": ["walletAddress"] }
+	] // optional (present for validation failures)
+}
+```
+
+Components:
+
+- `ApiError` utility (`src/utils/ApiError.js`) encapsulates `statusCode`, `message`, optional `details`.
+- Central error handler in `src/app.js` converts thrown `ApiError` instances to JSON responses.
+- Validation middleware (`src/middlewares/validate.js`) uses Joi to validate `req.body`, `req.query`, and `req.params` and sanitizes input.
+- Common schemas: walletAddress, signature, nonce, leaderboard limit.
+
+Usage Pattern:
+
+```js
+import { validate } from "../middlewares/validate.js";
+router.post(
+  "/auth",
+  validate({ body: Joi.object({ walletAddress: schemas.walletAddress }) }),
+  controller
+);
+```
+
+Throwing Errors:
+
+```js
+import { badRequest } from "../utils/ApiError.js";
+if (!condition) throw badRequest("Invalid state");
+```
+
+Validation Failures return status 400 with a `details` array from Joi.
+Uncaught errors produce a 500 with `message: "Internal server error"`.
+
 ## Swagger
 
 Swagger docs appear if `src/swagger.js` is wired and route exposed (check implementation).

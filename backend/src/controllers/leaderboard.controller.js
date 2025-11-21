@@ -1,4 +1,5 @@
 import User from "../models/user.js";
+import { internal } from "../utils/ApiError.js";
 
 export const getLeaderboardController = async (req, res) => {
   try {
@@ -25,10 +26,9 @@ export const getLeaderboardController = async (req, res) => {
 
   } catch (err) {
     console.error("Leaderboard error:", err);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error while fetching leaderboard."
-    });
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ success: false, message: err.message, details: err.details });
+    }
+    return res.status(500).json({ success: false, message: "Server error while fetching leaderboard." });
   }
 };

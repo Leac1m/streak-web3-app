@@ -1,10 +1,11 @@
 import { processCheckIn } from "../services/checkin.service.js";
+import { unauthorized } from "../utils/ApiError.js";
 
 export const checkInController = async (req, res) => {
   try {
     const user = req.user;
     if (!user) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      throw unauthorized();
     }
 
     const result = await processCheckIn(user._id);
@@ -18,10 +19,9 @@ export const checkInController = async (req, res) => {
     });
   } catch (err) {
     console.error("Check-in error:", err);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error while processing check-in",
-    });
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ success: false, message: err.message, details: err.details });
+    }
+    return res.status(500).json({ success: false, message: "Server error while processing check-in" });
   }
 };

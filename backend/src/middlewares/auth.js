@@ -1,15 +1,13 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
+import { unauthorized } from "../utils/ApiError.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {
     const header = req.headers.authorization;
 
     if (!header || !header.startsWith("Bearer ")) {
-      return res.status(401).json({
-        success: false,
-        message: "Missing or invalid authorization header."
-      });
+      throw unauthorized("Missing or invalid authorization header.");
     }
 
     const token = header.split(" ")[1];
@@ -19,28 +17,22 @@ export const authMiddleware = async (req, res, next) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or expired token."
-      });
+      throw unauthorized("Invalid or expired token.");
     }
 
     // Fetch user and attach to req
     const user = await User.findById(decoded.userId);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found."
-      });
+      throw unauthorized("User not found.");
     }
 
     req.user = user;
     next();
   } catch (err) {
     console.error("JWT middleware error:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal authentication error."
-    });
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ success: false, message: err.message, details: err.details });
+    }
+    return res.status(500).json({ success: false, message: "Internal authentication error." });
   }
 };

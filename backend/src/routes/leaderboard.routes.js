@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { getLeaderboardController } from "../controllers/leaderboard.controller.js";
+import { validate, schemas } from "../middlewares/validate.js";
+import Joi from 'joi';
 
 const router = Router();
 
@@ -24,6 +26,6 @@ const router = Router();
  *                   heroPoints:
  *                     type: number
  */
-router.get("/", getLeaderboardController);
+router.get("/", validate({ query: Joi.object({ limit: schemas.leaderboardLimit }) }), getLeaderboardController);
 
 export default router;

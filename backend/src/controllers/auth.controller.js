@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import TonWeb from "tonweb";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
+import { badRequest, unauthorized, internal } from "../utils/ApiError.js";
 
 const tonweb = new TonWeb();
 const nacl = TonWeb.utils.nacl;
@@ -10,18 +11,14 @@ export const authController = async (req, res) => {
   try {
     const { walletAddress, signature, nonce } = req.body;
 
-    if (!walletAddress || !signature || !nonce) {
-      return res.status(400).json({ success: false, message: "walletAddress, signature, nonce required." });
-    }
-
     // Fetch nonce from Redis
     const redisNonce = await global.redis.get(`nonce:${walletAddress}`);
     if (!redisNonce) {
-      return res.status(400).json({ success: false, message: "Nonce expired or invalid." });
+      throw badRequest("Nonce expired or invalid.");
     }
 
     if (redisNonce !== nonce) {
-      return res.status(400).json({ success: false, message: "Invalid nonce." });
+      throw badRequest("Invalid nonce.");
     }
 
 
@@ -35,7 +32,7 @@ export const authController = async (req, res) => {
     );
 
     if (!isValid) {
-      return res.status(401).json({ success: false, message: "Invalid signature." });
+      throw unauthorized("Invalid signature.");
     }
 
     // Delete nonce after use to prevent replay
@@ -65,6 +62,9 @@ export const authController = async (req, res) => {
     });
   } catch (err) {
     console.error("Auth error:", err);
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ success: false, message: err.message, details: err.details });
+    }
     return res.status(500).json({ success: false, message: "Authentication failed." });
   }
 };
