@@ -33,6 +33,12 @@ export const env = {
   },
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   tonNetwork: process.env.TON_NETWORK || 'mainnet'
+  ,
+  rateLimit: {
+    windowSeconds: parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS || '900', 10), // 15 minutes default
+    maxAuth: parseInt(process.env.RATE_LIMIT_MAX_AUTH || '20', 10),
+    maxNonce: parseInt(process.env.RATE_LIMIT_MAX_NONCE || '30', 10)
+  }
 };
 
 export const isProd = env.nodeEnv === 'production';

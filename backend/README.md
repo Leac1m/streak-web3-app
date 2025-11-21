@@ -85,6 +85,7 @@ Compose overrides host references so backend reaches services by internal names:
 
 - Use a stronger `JWT_SECRET` (generated automatically by prior setup script or via `openssl rand -hex 48`).
 - Consider enabling rate limiting & request logging.
+  - Rate limiting is available via Redis fixed window counters (see Rate Limiting section).
 - Run MongoDB & Redis with persistence and backups.
 
 ## Scripts
@@ -134,6 +135,38 @@ if (!condition) throw badRequest("Invalid state");
 
 Validation Failures return status 400 with a `details` array from Joi.
 Uncaught errors produce a 500 with `message: "Internal server error"`.
+
+## Rate Limiting
+
+Auth endpoints are rate limited using Redis counters:
+
+| Endpoint      | Default Window | Max Requests |
+| ------------- | -------------- | ------------ |
+| `/auth/nonce` | 15 minutes     | 30           |
+| `/auth`       | 15 minutes     | 20           |
+
+Configuration variables (optional):
+
+```
+RATE_LIMIT_WINDOW_SECONDS=900
+RATE_LIMIT_MAX_AUTH=20
+RATE_LIMIT_MAX_NONCE=30
+```
+
+Responses exceeding limits return `429`:
+
+```
+{
+	"success": false,
+	"message": "Rate limit exceeded",
+	"details": { "retryAfterSeconds": 742 }
+}
+```
+
+Headers:
+
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
 
 ## Swagger
 
