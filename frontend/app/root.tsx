@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import NavBar from "./components/NavBar";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -42,7 +43,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <div>
+      {/* App Header */}
+      <Header />
+      {/* Page Content */}
+      <main className="pt-16 p-4 container mx-auto min-h-[calc(100dvh-4rem)]">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
@@ -71,5 +82,19 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
     </main>
+  );
+}
+
+function Header() {
+  return <NavBar />;
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-gray-200 dark:border-gray-800 py-6">
+      <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400">
+        Built with React Router • {new Date().getFullYear()}
+      </div>
+    </footer>
   );
 }
