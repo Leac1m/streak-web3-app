@@ -1,8 +1,10 @@
 import { Link, NavLink } from "react-router";
 import { TonConnectButton } from '@tonconnect/ui-react';
+import { useAuth } from "../providers/AuthProvider";
 
 
 export default function NavBar() {
+  const { token, logout } = useAuth();
   const linkBase =
     "inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800";
   const active = " bg-gray-100 dark:bg-gray-800";
@@ -32,12 +34,21 @@ export default function NavBar() {
           >
             Profile
           </NavLink>
-          <NavLink
-            to="/login"
-            className={({ isActive }) => linkBase + (isActive ? active : "")}
-          >
-            Login
-          </NavLink>
+          {!token ? (
+            <NavLink
+              to="/login"
+              className={({ isActive }) => linkBase + (isActive ? active : "")}
+            >
+              Login
+            </NavLink>
+          ) : (
+            <button
+              onClick={logout}
+              className={linkBase}
+            >
+              Logout
+            </button>
+          )}
           <TonConnectButton />
         </nav>
       </div>

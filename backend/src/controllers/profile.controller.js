@@ -1,50 +1,25 @@
-import User from "../models/user.js";
-
 export const getProfileController = async (req, res) => {
   try {
-    // TEMPORARY: will replace with JWT later
-    const userId = req.body.userId;
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing userId. JWT auth will handle this later.",
-      });
-    }
-
-    const user = await User.findById(userId).lean();
+    const user = req.user;
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        message: "User not found.",
+        message: "Unauthorized",
       });
     }
 
     return res.status(200).json({
-      success: true,
-      user: {
-        walletAddress: user.walletAddress,
-        heroPoints: user.heroPoints,
-
-        streak: {
-          currentStreak: user.streak.currentStreak,
-          lastCheckInAt: user.streak.lastCheckInAt,
-          nextEligibleAt: user.streak.nextEligibleAt,
-        },
-
-        meta: {
-          createdAt: user.meta.createdAt,
-          lastLoginAt: user.meta.lastLoginAt,
-        },
-      },
+      walletAddress: user.walletAddress,
+      heroPoints: user.heroPoints,
+      dailyStreak: user.streak?.currentStreak ?? 0,
+      lastCheckIn: user.streak?.lastCheckInAt ?? null,
+      nextEligibleCheckIn: user.streak?.nextEligibleAt ?? null,
+      createdAt: user.meta?.createdAt ?? user.createdAt,
+      lastLoginAt: user.meta?.lastLoginAt ?? null,
     });
   } catch (err) {
     console.error("Profile error:", err);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error while fetching profile.",
-    });
+    return res.status(500).json({ message: "Server error while fetching profile." });
   }
 };

@@ -1,27 +1,13 @@
 import { processCheckIn } from "../services/checkin.service.js";
-import User from "../models/user.js";
 
 export const checkInController = async (req, res) => {
   try {
-    // TEMPORARY: Will replace this when JWT is added
-    const userId = req.body.userId;
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing userId. JWT auth will replace this soon.",
-      });
-    }
-
-    const user = await User.findById(userId);
+    const user = req.user;
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const result = await processCheckIn(userId);
+    const result = await processCheckIn(user._id);
 
     return res.status(200).json({
       success: result.success,
