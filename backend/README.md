@@ -25,7 +25,7 @@ Required variables (validated at runtime):
 Optional:
 
 - `PORT` (default 5000)
-- `JWT_EXPIRY_DAYS` (default 7)
+- `JWT_EXPIRY_HOURS` (default 6) – legacy `JWT_EXPIRY_DAYS` will still be honored if present (converted to hours)
 - `CORS_ORIGIN` (default http://localhost:5173)
 - `TON_NETWORK` (default mainnet)
 

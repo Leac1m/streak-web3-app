@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 import TonWeb from "tonweb";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env.js";
 
 const tonweb = new TonWeb();
 const nacl = TonWeb.utils.nacl;
@@ -49,8 +50,8 @@ export const authController = async (req, res) => {
     user.lastLoginAt = new Date();
     await user.save();
 
-    // Create JWT
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    // Create JWT with new hour-based expiry
+    const token = jwt.sign({ userId: user._id }, env.jwtSecret, { expiresIn: `${env.jwtExpiryHours}h` });
 
     return res.status(200).json({
       success: true,

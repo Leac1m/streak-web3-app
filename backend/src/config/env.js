@@ -19,7 +19,12 @@ export const env = {
   port: parseInt(process.env.PORT || '5000', 10),
   mongoUri: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
-  jwtExpiryDays: parseInt(process.env.JWT_EXPIRY_DAYS || '7', 10),
+  // JWT expiry in hours (default 6 hours). If legacy JWT_EXPIRY_DAYS is present, convert to hours.
+  jwtExpiryHours: (() => {
+    if (process.env.JWT_EXPIRY_HOURS) return parseInt(process.env.JWT_EXPIRY_HOURS, 10);
+    if (process.env.JWT_EXPIRY_DAYS) return parseInt(process.env.JWT_EXPIRY_DAYS, 10) * 24;
+    return 6;
+  })(),
   redis: {
     url: process.env.REDIS_URL,
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
