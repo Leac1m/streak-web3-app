@@ -5,6 +5,11 @@ import mongoose from "mongoose";
 import { createClient } from "redis";
 import app from "./app.js";
 
+import { swaggerServe, swaggerUiMiddleware } from "./swagger.js";
+
+app.use("/docs", swaggerServe, swaggerUiMiddleware);
+
+
 const PORT = process.env.PORT || 5000;
 
 (async () => {

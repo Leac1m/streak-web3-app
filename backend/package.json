@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-  "dev": "nodemon src/server.js",
-  "start": "node src/server.js"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.20.1",
     "redis": "^5.10.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
