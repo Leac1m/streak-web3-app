@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router";
 import { useAuth } from "../providers/AuthProvider";
+import { ConnectButton } from "@mysten/dapp-kit";
 
 
 export default function NavBar() {
@@ -48,7 +49,7 @@ export default function NavBar() {
               Logout
             </button>
           )}
-          <button>Conect Wallet</button>
+          <ConnectButton />
         </nav>
       </div>
     </header>

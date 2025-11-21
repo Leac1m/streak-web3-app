@@ -6,8 +6,22 @@ import {
   useMemo,
   useState,
 } from "react";
+import {
+  SuiClientProvider,
+  WalletProvider,
+  useConnectWallet,
+  useCurrentAccount,
+  useCurrentWallet,
+  useDisconnectWallet,
+  useSignPersonalMessage,
+  useWallets,
+} from "@mysten/dapp-kit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 import { api, getToken, setToken } from "../lib/api";
+import networkConfig from "src/config/networkConfig";
 
 // Types
 export type UserProfile = {
@@ -23,7 +37,7 @@ export type AuthContextValue = {
   token: string | null;
   user: UserProfile | null;
   loading: boolean;
-  connectWallet: () => void;
+  connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   authenticate: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -35,22 +49,29 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function AuthInnerProvider({ children }: { children: React.ReactNode }) {
   const [token, setTokenState] = useState<string | null>(() => getToken());
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const connectWallet = useCallback(() => {
-  }, []);
+  const { mutateAsync: connect } = useConnectWallet();
+  const { currentWallet } = useCurrentWallet();
+  const { mutate: disconnect } = useDisconnectWallet();
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  const currentAccount = useCurrentAccount();
+  const walletAddress = currentAccount?.address;
+
+  const connectWallet = async () => {
+
+  };
 
   const disconnectWallet = useCallback(() => {
-    setWalletAddress(null);
-  }, []);
+    disconnect();
+  }, [disconnect]);
 
-  const logout = useCallback(() => {
+  const logout = () => {
     setToken(null);
     setTokenState(null);
     setUser(null);
-  }, []);
+  };
 
   const refreshProfile = useCallback(async () => {
     if (!token) return;
@@ -83,10 +104,10 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
         walletAddress,
       });
 
-
-      // 2) Ask user to sign the nonce (placeholder: TODO integrate sign feature)
-      // NOTE: Implement SUI sign once enabled. For now, we pass nonce back as message
-      const signature = "0kkkkk"; // TODO: use signTransacture to create a signature when available
+      // 2) Ask user to sign the nonce
+      const signature = await signPersonalMessage({
+        message: new TextEncoder().encode(nonce),
+      });
 
       // 3) Submit auth
       const result = await api.post<{ token: string; user: UserProfile }>(
@@ -104,11 +125,11 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [walletAddress]);
+  }, [walletAddress, signPersonalMessage]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      walletAddress,
+      walletAddress: walletAddress || null,
       token,
       user,
       loading,
@@ -138,7 +159,13 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-      <AuthInnerProvider>{children}</AuthInnerProvider>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
+        <WalletProvider>
+          <AuthInnerProvider>{children}</AuthInnerProvider>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
   );
 }
 

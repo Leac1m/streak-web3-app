@@ -11,6 +11,7 @@ import NavBar from "./components/NavBar";
 import type { Route } from "./+types/root";
 import { AuthProvider } from './providers/AuthProvider';
 import "./app.css";
+import '@mysten/dapp-kit/dist/index.css';
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
