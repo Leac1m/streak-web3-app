@@ -1,0 +1,37 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo:7
+    container_name: streak-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+  redis:
+    image: redis:7-alpine
+    container_name: streak-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    container_name: streak-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - "5000:5000"
+    environment:
+      # Override connection hosts to match service names
+      MONGO_URI: mongodb://mongo:27017/ton_streak
+      REDIS_URL: redis
+      REDIS_PORT: 6379
+      CORS_ORIGIN: http://localhost:5173
+volumes:
+  mongo_data:

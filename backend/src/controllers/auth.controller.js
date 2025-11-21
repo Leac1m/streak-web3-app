@@ -25,13 +25,13 @@ export const authController = async (req, res) => {
 
 
     // Verify TON signature
-    const isValid = true; // for testing
+    // const isValid = true; // for testing
 
-    // const isValid = nacl.sign.detached.verify(
-    //   Buffer.from(nonce),
-    //   TonWeb.utils.base64ToBytes(signature),
-    //   TonWeb.utils.base64ToBytes(walletAddress)
-    // );
+    const isValid = nacl.sign.detached.verify(
+      Buffer.from(nonce),
+      TonWeb.utils.base64ToBytes(signature),
+      TonWeb.utils.base64ToBytes(walletAddress)
+    );
 
     if (!isValid) {
       return res.status(401).json({ success: false, message: "Invalid signature." });

@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import {
+  CHAIN,
   TonConnectUIProvider,
   useTonConnectUI,
   useTonWallet,
@@ -98,9 +99,19 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
         walletAddress,
       });
 
+      const textData = {
+        type: "text" as const,
+        text: nonce,
+        network: CHAIN.TESTNET, // MAINNET = '-239', TESTNET = '-3'
+        from: walletAddress,
+      };
+
+      const { signature } = await tonConnectUI.signData(textData);
+      console.log("Signed:", signature);
+
       // 2) Ask user to sign the nonce (placeholder: TODO integrate sign feature)
       // NOTE: Implement TON sign once enabled. For now, we pass nonce back as message
-      const signature = "0kkkkk"; // TODO: use tonConnectUI to create a signature when available
+      // const signature = "0kkkkk"; // TODO: use tonConnectUI to create a signature when available
 
       // 3) Submit auth
       const result = await api.post<{ token: string; user: UserProfile }>(
