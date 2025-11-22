@@ -60,7 +60,7 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
   const walletAddress = currentAccount?.address;
 
   const connectWallet = async () => {
-
+    
   };
 
   const disconnectWallet = useCallback(() => {

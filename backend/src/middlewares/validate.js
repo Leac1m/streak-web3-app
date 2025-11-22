@@ -23,7 +23,7 @@ export const validate = (schemas) => (req, _res, next) => {
 // Common reusable patterns/schemas
 export const schemas = {
   walletAddress: Joi.string().min(5).max(150).required(),
-  signature: Joi.string().min(10).required(),
+  signature: { bytes: Joi.string().min(10).required(), signature: Joi.string().min(10).required() },
   nonce: Joi.string().min(10).required(),
   leaderboardLimit: Joi.number().integer().min(1).max(100).default(20)
 };

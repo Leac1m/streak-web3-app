@@ -2,6 +2,9 @@ import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { badRequest, unauthorized } from "../utils/ApiError.js";
+import { verifySignature } from "@mysten/sui/verify";
+
+// import verifySignature from "../utils/verifySigniture.js";
 
 export const authController = async (req, res) => {
   try {
@@ -19,12 +22,14 @@ export const authController = async (req, res) => {
 
 
     // Verify SUI signature
-    const isValid = true; // for testing
-
-
-    if (!isValid) {
+    // const isValid = await verifySignature(nonce, signature.signature, walletAddress); // for testing
+    await verifySignature(signature.bytes, signature.signature, { address: walletAddress }).catch(()=> {
       throw unauthorized("Invalid signature.");
-    }
+    })
+
+    // if (!publicKey) {
+    //   throw unauthorized("Invalid signature.");
+    // }
 
     // Delete nonce after use to prevent replay
     await global.redis.del(`nonce:${walletAddress}`);
