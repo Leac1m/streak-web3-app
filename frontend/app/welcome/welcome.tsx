@@ -1,89 +1,179 @@
-import logoDark from "./logo-dark.svg";
-import logoLight from "./logo-light.svg";
+import type { ReactNode } from "react";
+import { Link } from "react-router";
+import { useAuth } from "../providers/AuthProvider";
 
 export function Welcome() {
+  const { token, user } = useAuth();
+
   return (
-    <main className="flex items-center justify-center pt-16 pb-4">
-      <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
-        <header className="flex flex-col items-center gap-9">
-          <div className="w-[500px] max-w-[100vw] p-4">
-            <img
-              src={logoLight}
-              alt="React Router"
-              className="block w-full dark:hidden"
-            />
-            <img
-              src={logoDark}
-              alt="React Router"
-              className="hidden w-full dark:block"
-            />
-          </div>
-        </header>
-        <div className="max-w-[300px] w-full space-y-6 px-4">
-          <nav className="rounded-3xl border border-gray-200 p-6 dark:border-gray-700 space-y-4">
-            <p className="leading-6 text-gray-700 dark:text-gray-200 text-center">
-              What&apos;s next?
+    <div className="space-y-24">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/70 px-6 py-16 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 md:px-12">
+        <div className="absolute inset-0 -z-10 bg-linear-to-br from-blue-600/15 via-indigo-500/10 to-transparent" />
+        <div className="grid gap-12 md:grid-cols-2 md:items-center">
+          <div className="space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-600/10 px-4 py-1 text-sm font-medium text-blue-700 dark:text-blue-300">
+              Powered by Sui wallets and daily streaks
+            </span>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
+              Keep your streak alive, earn hero points, and climb the Sui leaderboard.
+            </h1>
+            <p className="text-base text-slate-600 dark:text-slate-300">
+              Authenticate with your wallet, check in once per day, and watch your hero points grow. Miss more than 48 hours and the streak resets—consistency is everything.
             </p>
-            <ul>
-              {resources.map(({ href, text, icon }) => (
-                <li key={href}>
-                  <a
-                    className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500"
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {icon}
-                    {text}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                to={token ? "/dashboard" : "/login"}
+                className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-105"
+              >
+                {token ? "Open dashboard" : "Start your streak"}
+              </Link>
+              <Link
+                to="/leaderboard"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                View leaderboard
+              </Link>
+            </div>
+            {token && user && (
+              <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white/60 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300 sm:grid-cols-3">
+                <StreakStat label="Current streak" value={`${user.dailyStreak ?? 0} days`} />
+                <StreakStat label="Hero points" value={user.heroPoints ?? 0} />
+                <StreakStat label="Last check-in" value={formatDate(user.lastCheckIn)} />
+              </div>
+            )}
+          </div>
+          <div className="grid gap-6">
+            <div className="rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Why streaks matter
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Daily streaks keep your community active. Reward consistency with hero points that fuel leaderboards, unlock perks, or anchor game loops.
+              </p>
+              <dl className="mt-6 grid gap-4 text-sm">
+                <FeatureItem title="Daily cadence" description="24 hour cooldown with a 48 hour grace period keeps streaks fair and predictable." />
+                <FeatureItem title="Fair verification" description="Personal message signatures prevent abuse without asking users to share private keys." />
+                <FeatureItem title="Redis-backed scaling" description="Nonces and rate limits live in Redis so your auth flow stays resilient." />
+              </dl>
+            </div>
+            <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white/60 p-6 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+              <StepItem step="01" title="Connect Sui wallet" description="Pick a supported wallet, authorise the connection, and get your address on file." />
+              <StepItem step="02" title="Sign the nonce" description="We hand you a one-time nonce; you sign it to prove ownership without risking funds." />
+              <StepItem step="03" title="Check in daily" description="Trigger the check-in endpoint once per day to keep the streak alive and points climbing." />
+            </div>
+          </div>
         </div>
-      </div>
-    </main>
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-3">
+        <HighlightCard
+          title="Blazing-fast onboarding"
+          description="Wallet connect + signature exchange completes in seconds thanks to Redis-backed nonce storage."
+          icon={
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/10 text-blue-600">⚡</span>
+          }
+        />
+        <HighlightCard
+          title="Transparent streak logic"
+          description="Every check-in response shares your next eligible window, so your users always know when to return."
+          icon={
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-600">📅</span>
+          }
+        />
+        <HighlightCard
+          title="Leaderboard ready"
+          description="Real-time hero point rankings keep engagement high. Pull the top wallets with a single API request."
+          icon={
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-600">🏆</span>
+          }
+        />
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-slate-900 px-6 py-12 text-white shadow-sm dark:border-slate-700 md:px-12">
+        <div className="grid gap-8 md:grid-cols-[1.2fr,1fr] md:items-center">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Ready to launch your streak experience?
+            </h2>
+            <p className="text-sm leading-6 text-slate-200">
+              Deploy the backend, point the frontend to your API, and invite your community. The stack is production-ready with Docker images, rate limiting, and secure JWT issuance.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+            >
+              Authenticate wallet
+            </Link>
+            <Link
+              to="/leaderboard"
+              className="inline-flex items-center justify-center rounded-full border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              Explore rankings
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
-const resources = [
-  {
-    href: "https://reactrouter.com/docs",
-    text: "React Router Docs",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M9.99981 10.0751V9.99992M17.4688 17.4688C15.889 19.0485 11.2645 16.9853 7.13958 12.8604C3.01467 8.73546 0.951405 4.11091 2.53116 2.53116C4.11091 0.951405 8.73546 3.01467 12.8604 7.13958C16.9853 11.2645 19.0485 15.889 17.4688 17.4688ZM2.53132 17.4688C0.951566 15.8891 3.01483 11.2645 7.13974 7.13963C11.2647 3.01471 15.8892 0.951453 17.469 2.53121C19.0487 4.11096 16.9854 8.73551 12.8605 12.8604C8.73562 16.9853 4.11107 19.0486 2.53132 17.4688Z"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    href: "https://rmx.as/discord",
-    text: "Join Discord",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 24 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M15.0686 1.25995L14.5477 1.17423L14.2913 1.63578C14.1754 1.84439 14.0545 2.08275 13.9422 2.31963C12.6461 2.16488 11.3406 2.16505 10.0445 2.32014C9.92822 2.08178 9.80478 1.84975 9.67412 1.62413L9.41449 1.17584L8.90333 1.25995C7.33547 1.51794 5.80717 1.99419 4.37748 2.66939L4.19 2.75793L4.07461 2.93019C1.23864 7.16437 0.46302 11.3053 0.838165 15.3924L0.868838 15.7266L1.13844 15.9264C2.81818 17.1714 4.68053 18.1233 6.68582 18.719L7.18892 18.8684L7.50166 18.4469C7.96179 17.8268 8.36504 17.1824 8.709 16.4944L8.71099 16.4904C10.8645 17.0471 13.128 17.0485 15.2821 16.4947C15.6261 17.1826 16.0293 17.8269 16.4892 18.4469L16.805 18.8725L17.3116 18.717C19.3056 18.105 21.1876 17.1751 22.8559 15.9238L23.1224 15.724L23.1528 15.3923C23.5873 10.6524 22.3579 6.53306 19.8947 2.90714L19.7759 2.73227L19.5833 2.64518C18.1437 1.99439 16.6386 1.51826 15.0686 1.25995ZM16.6074 10.7755L16.6074 10.7756C16.5934 11.6409 16.0212 12.1444 15.4783 12.1444C14.9297 12.1444 14.3493 11.6173 14.3493 10.7877C14.3493 9.94885 14.9378 9.41192 15.4783 9.41192C16.0471 9.41192 16.6209 9.93851 16.6074 10.7755ZM8.49373 12.1444C7.94513 12.1444 7.36471 11.6173 7.36471 10.7877C7.36471 9.94885 7.95323 9.41192 8.49373 9.41192C9.06038 9.41192 9.63892 9.93712 9.6417 10.7815C9.62517 11.6239 9.05462 12.1444 8.49373 12.1444Z"
-          strokeWidth="1.5"
-        />
-      </svg>
-    ),
-  },
-];
+function StreakStat({ label, value }: { label: string; value: string | number | null }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-lg font-semibold text-slate-900 dark:text-white">{value ?? "-"}</p>
+    </div>
+  );
+}
+
+function FeatureItem({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="space-y-1">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
+      <p className="text-sm text-slate-600 dark:text-slate-300">{description}</p>
+    </div>
+  );
+}
+
+function StepItem({ step, title, description }: { step: string; title: string; description: string }) {
+  return (
+    <div className="flex gap-4">
+      <span className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        {step}
+      </span>
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function HighlightCard({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: ReactNode;
+}) {
+  return (
+    <article className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/70 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
+      {icon}
+      <div>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{description}</p>
+      </div>
+    </article>
+  );
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString();
+}

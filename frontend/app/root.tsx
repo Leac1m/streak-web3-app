@@ -9,9 +9,9 @@ import {
 import NavBar from "./components/NavBar";
 
 import type { Route } from "./+types/root";
-import { AuthProvider } from './providers/AuthProvider';
+import { AuthProvider } from "./providers/AuthProvider";
 import "./app.css";
-import '@mysten/dapp-kit/dist/index.css';
+import "@mysten/dapp-kit/dist/index.css";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -93,7 +93,7 @@ function Footer() {
   return (
     <footer className="border-t border-gray-200 dark:border-gray-800 py-6">
       <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400">
-        Built with React Router • {new Date().getFullYear()}
+        Streak • Daily check-ins on Sui · {new Date().getFullYear()}
       </div>
     </footer>
   );

@@ -17,8 +17,6 @@ import {
   useWallets,
 } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
-
 
 const queryClient = new QueryClient();
 
@@ -61,9 +59,25 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
   const currentAccount = useCurrentAccount();
   const walletAddress = currentAccount?.address;
 
-  const connectWallet = async () => {
-    
-  };
+  const wallets = useWallets();
+
+  const connectWallet = useCallback(async () => {
+    if (currentWallet) return;
+    if (!wallets.length) {
+      throw new Error(
+        "No Sui wallets detected. Please install a compatible wallet."
+      );
+    }
+
+    if (wallets.length === 1) {
+      await connect({ wallet: wallets[0]! });
+      return;
+    }
+
+    throw new Error(
+      "Multiple wallets available. Use the Connect button to choose one."
+    );
+  }, [connect, currentWallet, wallets]);
 
   const disconnectWallet = useCallback(() => {
     disconnect();
@@ -106,12 +120,10 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
         walletAddress,
       });
 
-
       // 2) Ask user to sign the nonce
       const signature = await signPersonalMessage({
         message: new TextEncoder().encode(nonce),
       });
-
 
       // 3) Submit auth
       const result = await api.post<{ token: string; user: UserProfile }>(
@@ -130,6 +142,14 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, [walletAddress, signPersonalMessage]);
+
+  useEffect(() => {
+    if (token) {
+      void refreshProfile();
+    } else {
+      setUser(null);
+    }
+  }, [token, refreshProfile]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
