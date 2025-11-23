@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-        <WalletProvider autoConnect>
+        <WalletProvider autoConnect slushWallet={{ name: "streak"}} >
           <AuthInnerProvider>{children}</AuthInnerProvider>
         </WalletProvider>
       </SuiClientProvider>
