@@ -60,19 +60,20 @@ export default function Login() {
           </dl>
           <div className="mt-6 space-y-3">
             {!walletAddress && (
-              <button
-                type="button"
-                onClick={() =>
-                  void connectWallet().catch((e: unknown) =>
-                    setError(
-                      (e as Error)?.message ?? "Unable to connect wallet."
-                    )
-                  )
-                }
-                className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-105"
-              >
-                Connect wallet
-              </button>
+              // <button
+              //   type="button"
+              //   onClick={() =>
+              //     void connectWallet().catch((e: unknown) =>
+              //       setError(
+              //         (e as Error)?.message ?? "Unable to connect wallet."
+              //       )
+              //     )
+              //   }
+              //   className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-105"
+              // >
+              //   Connect wallet
+              // </button>
+              <ConnectButton className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-105" />
             )}
             {walletAddress && !token && (
               <button
