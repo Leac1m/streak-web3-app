@@ -27,20 +27,24 @@ export const authController = async (req, res) => {
       throw unauthorized("Invalid signature.");
     }
 
-    // Delete nonce after use to prevent replay
+    // Remove nonce to prevent replay
     await global.redis.del(`nonce:${walletAddress}`);
-    await global.redis.del(`nonce_ts:${walletAddress}`);
 
-    // Upsert user in MongoDB
+    // ---------------------------
+    // SAVE USER, ISSUE JWT
+    // ---------------------------
+
     let user = await User.findOne({ walletAddress });
-    if (!user) {
-      user = new User({ walletAddress });
-    }
+    if (!user) user = new User({ walletAddress });
+
     user.lastLoginAt = new Date();
     await user.save();
 
-    // Create JWT with new hour-based expiry
-    const token = jwt.sign({ userId: user._id }, env.jwtSecret, { expiresIn: `${env.jwtExpiryHours}h` });
+    const token = jwt.sign(
+      { userId: user._id },
+      env.jwtSecret,
+      { expiresIn: `${env.jwtExpiryHours}h` }
+    );
 
     return res.status(200).json({
       success: true,
@@ -52,10 +56,15 @@ export const authController = async (req, res) => {
         streak: user.streak,
       },
     });
+
   } catch (err) {
     console.error("Auth error:", err);
     if (err.statusCode) {
-      return res.status(err.statusCode).json({ success: false, message: err.message, details: err.details });
+      return res.status(err.statusCode).json({
+        success: false,
+        message: err.message,
+        details: err.details
+      });
     }
     return res.status(500).json({ success: false, message: "Authentication failed." });
   }
