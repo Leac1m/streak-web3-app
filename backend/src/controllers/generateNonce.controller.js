@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
 import User from "../models/user.js";
-import { internal } from "../utils/ApiError.js";
 
 export const generateNonceController = async (req, res) => {
   try {

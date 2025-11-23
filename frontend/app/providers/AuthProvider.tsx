@@ -7,12 +7,23 @@ import {
   useState,
 } from "react";
 import {
-  CHAIN,
-  TonConnectUIProvider,
-  useTonConnectUI,
-  useTonWallet,
-} from "@tonconnect/ui-react";
+  SuiClientProvider,
+  WalletProvider,
+  useConnectWallet,
+  useCurrentAccount,
+  useCurrentWallet,
+  useDisconnectWallet,
+  useSignPersonalMessage,
+  useWallets,
+} from "@mysten/dapp-kit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
+
+
+const queryClient = new QueryClient();
+
 import { api, getToken, setToken } from "../lib/api";
+import networkConfig from "src/config/networkConfig";
 
 // Types
 export type UserProfile = {
@@ -28,7 +39,7 @@ export type AuthContextValue = {
   token: string | null;
   user: UserProfile | null;
   loading: boolean;
-  connectWallet: () => void;
+  connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   authenticate: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -39,34 +50,30 @@ export type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function AuthInnerProvider({ children }: { children: React.ReactNode }) {
-  const wallet = useTonWallet();
-  const [tonConnectUI] = useTonConnectUI();
-
   const [token, setTokenState] = useState<string | null>(() => getToken());
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Track wallet connection state
-  useEffect(() => {
-    const addr = wallet?.account?.address || null;
-    setWalletAddress(addr);
-  }, [wallet]);
+  const { mutateAsync: connect } = useConnectWallet();
+  const { currentWallet } = useCurrentWallet();
+  const { mutate: disconnect } = useDisconnectWallet();
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  const currentAccount = useCurrentAccount();
+  const walletAddress = currentAccount?.address;
 
-  const connectWallet = useCallback(() => {
-    tonConnectUI.openModal();
-  }, [tonConnectUI]);
+  const connectWallet = async () => {
+    
+  };
 
   const disconnectWallet = useCallback(() => {
-    tonConnectUI.disconnect();
-    setWalletAddress(null);
-  }, [tonConnectUI]);
+    disconnect();
+  }, [disconnect]);
 
-  const logout = useCallback(() => {
+  const logout = () => {
     setToken(null);
     setTokenState(null);
     setUser(null);
-  }, []);
+  };
 
   const refreshProfile = useCallback(async () => {
     if (!token) return;
@@ -98,30 +105,23 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
       const { nonce } = await api.post<{ nonce: string }>("/auth/nonce", {
         walletAddress,
       });
-      // Build message expected by backend (suffix must match)
-      const message = `Please sign this message to verify your identity. Nonce: ${nonce}`;
-      // const domain = "https://tonconnect-sdk-demo-dapp.vercel.app"// window.location.host;
 
-      // 2) Request signature from wallet via TonConnect (text signing)
-      const { signature, timestamp, address, domain, payload } = await tonConnectUI.signData({
-        type: "text",
-        text: message,
+
+      // 2) Ask user to sign the nonce
+      const signature = await signPersonalMessage({
+        message: new TextEncoder().encode(nonce),
       });
-      console.log("Signature received", { signature, timestamp });
 
-      // 3) Submit auth with expanded payload
-      const publicKey = wallet?.account?.publicKey;
-      if (!publicKey) throw new Error("Missing public key from wallet");
 
-      const result = await api.post<{ token: string; user: UserProfile }>("/auth", {
-        walletAddress,
-        publicKey,
-        signature,
-        nonce,
-        message: payload!.text,
-        domain,
-        timestamp: timestamp, // fallback if library doesn't return timestamp
-      });
+      // 3) Submit auth
+      const result = await api.post<{ token: string; user: UserProfile }>(
+        "/auth",
+        {
+          walletAddress,
+          signature,
+          nonce,
+        }
+      );
 
       setToken(result.token);
       setTokenState(result.token);
@@ -129,11 +129,11 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [walletAddress, tonConnectUI, wallet]);
+  }, [walletAddress, signPersonalMessage]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      walletAddress,
+      walletAddress: walletAddress || null,
       token,
       user,
       loading,
@@ -163,9 +163,13 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-    <TonConnectUIProvider manifestUrl="https://tonconnect-sdk-demo-dapp.vercel.app/tonconnect-manifest.json">
-      <AuthInnerProvider>{children}</AuthInnerProvider>
-    </TonConnectUIProvider>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
+        <WalletProvider>
+          <AuthInnerProvider>{children}</AuthInnerProvider>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
   );
 }
 

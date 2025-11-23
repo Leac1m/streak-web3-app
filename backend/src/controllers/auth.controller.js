@@ -1,97 +1,27 @@
 import User from "../models/user.js";
-import TonWeb from "tonweb";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { badRequest, unauthorized } from "../utils/ApiError.js";
-import crypto from "crypto";
-import { Address } from "@ton/core";
 
-// import { Address } from "@ton/core";
-import nacl from "tweetnacl";
-// import crypto from "crypto";
+import verifySignature from "../utils/verifySigniture.js";
 
 export const authController = async (req, res) => {
   try {
-    const {
-      walletAddress,
-      signature,
-      nonce,
-      publicKey,
-      message,
-      domain,
-      timestamp
-    } = req.body;
-
-    // ---------------------------
-    // VALIDATE NONCE
-    // ---------------------------
+    const { walletAddress, signature, nonce, message } = req.body;
+    console.log("walletAddress", walletAddress, "signature", signature, "nonce", nonce, "message", message);
+    // Fetch nonce from Redis
     const redisNonce = await global.redis.get(`nonce:${walletAddress}`);
-    if (!redisNonce) throw badRequest("Nonce expired or invalid.");
-
-    const expectedSuffix = `Nonce: ${redisNonce}`;
-    if (!message.endsWith(expectedSuffix)) {
-      throw badRequest("Message does not end with expected nonce suffix.");
+    if (!redisNonce) {
+      throw badRequest("Nonce expired or invalid.");
     }
 
-    // Timestamp freshness
-    const nowMs = Date.now();
-    const timestampMs = Number(timestamp) * 1000;
-    const driftMs = Math.abs(nowMs - timestampMs);
-
-    if (driftMs > 5 * 60 * 1000) {
-      throw badRequest("Timestamp outside allowed drift window.");
+    if (redisNonce !== nonce) {
+      throw badRequest("Invalid nonce.");
     }
 
-    // ---------------------------
-    // RECONSTRUCT TON-CONNECT SIGNATURE PAYLOAD
-    // ---------------------------
 
-    const addr = Address.parse(walletAddress);
-
-    // prefix = 4 bytes zero
-    const prefix = Buffer.alloc(4);
-
-    // label = "ton-connect"
-    const label = Buffer.from("ton-connect", "utf8");
-
-    // Address encoding: 1 byte wc + 32 byte hash
-    const wc = Buffer.from([addr.workChain]); // int8
-    const addrHash = Buffer.from(addr.hash);
-
-    // Domain: length (4 bytes LE) + value
-    const domainBuf = Buffer.from(domain, "utf8");
-    const domainLen = Buffer.alloc(4);
-    domainLen.writeUInt32LE(domainBuf.length);
-
-    // Timestamp: uint64 BE
-    const tsBuf = Buffer.alloc(8);
-    tsBuf.writeBigUInt64BE(BigInt(timestamp));
-
-    // Payload: message (utf-8 bytes)
-    const payloadBuf = Buffer.from(message, "utf8");
-
-    const fullMessage = Buffer.concat([
-      prefix,
-      label,
-      wc,
-      addrHash,
-      domainLen,
-      domainBuf,
-      tsBuf,
-      payloadBuf
-    ]);
-
-    const messageHash = crypto.createHash("sha256").update(fullMessage).digest();
-
-    // signature + pubkey MUST be base64
-    const signatureBuffer = Buffer.from(signature, "base64");
-    const publicKeyBuffer = Buffer.from(publicKey, "hex");
-
-    const isValid = nacl.sign.detached.verify(
-      messageHash,
-      signatureBuffer,
-      publicKeyBuffer
-    );
+    // Verify SUI signature
+    const isValid = await verifySignature(nonce, signature.signature, walletAddress); // for testing
 
     if (!isValid) {
       throw unauthorized("Invalid signature.");

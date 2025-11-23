@@ -193,62 +193,47 @@ Headers:
 ### Authentication Flow (TON Wallet)
 
 1. Request nonce with wallet address.
-2. Construct TON Connect sign-data payload including: address, domain, current timestamp (ms), and message ending with `Nonce: <nonce>`.
-3. Sign the SHA-256 hash of the packed payload (frontend wallet integration) producing a base64 signature and provide the wallet's ed25519 public key (hex).
-4. POST walletAddress, publicKey, signature, nonce, message, domain, timestamp to `/api/auth`.
-5. Receive JWT and use `Authorization: Bearer <token>` for protected endpoints.
+2. Sign nonce message (implementation in frontend/wallet layer).
+3. Exchange signature + nonce for JWT.
+4. Use `Authorization: Bearer <token>` for protected endpoints.
 
 ### Endpoints Summary
 
-| Method | Path                         | Protected         | Description                           |
-| ------ | ---------------------------- | ----------------- | ------------------------------------- |
-| GET    | `/api/`                      | No                | Health/status ping                    |
-| POST   | `/api/auth/nonce`            | No (rate limited) | Generate one-time nonce for signature |
-| POST   | `/api/auth`                  | No (rate limited) | Verify signature & issue JWT          |
-| GET    | `/api/leaderboard?limit=<n>` | No                | Top users by hero points (default 10) |
-| POST   | `/api/check-in`              | Yes               | Daily check-in to advance streak      |
-| GET    | `/api/profile`               | Yes               | Current user profile & streak         |
+| Method | Path | Protected | Description |
+| ------ | ---- | --------- | ----------- |
+| GET | `/api/` | No | Health/status ping |
+| POST | `/api/auth/nonce` | No (rate limited) | Generate one-time nonce for signature |
+| POST | `/api/auth` | No (rate limited) | Verify signature & issue JWT |
+| GET | `/api/leaderboard?limit=<n>` | No | Top users by hero points (default 10) |
+| POST | `/api/check-in` | Yes | Daily check-in to advance streak |
+| GET | `/api/profile` | Yes | Current user profile & streak |
 
 ### Sample Requests
 
 Request nonce:
-
 ```bash
 curl -X POST http://localhost:5000/api/auth/nonce \
 	-H 'Content-Type: application/json' \
 	-d '{"walletAddress":"EQC1234abcd..."}'
 ```
 
-Authenticate (after producing signature & data):
-
+Authenticate (after signing nonce message):
 ```bash
 curl -X POST http://localhost:5000/api/auth \
 	-H 'Content-Type: application/json' \
-	-d '{
-		"walletAddress": "EQC1234abcd...",
-		"publicKey": "0123ab...f0", 
-		"signature": "base64-signature==",
-		"nonce": "1739283812-xyz",
-		"message": "Please sign this message to verify your identity. Nonce: 1739283812-xyz",
-		"domain": "app.local",
-		"timestamp": 1739283812000
-	}'
+	-d '{"walletAddress":"EQC1234abcd...","signature":"base64-signature","nonce":"1739283812-xyz"}'
 ```
-
 Response:
-
 ```json
-{ "token": "<jwt>", "user": { "walletAddress": "EQC1234abcd...", "heroPoints": 0, "streak": 0 } }
+{ "token": "<jwt>" }
 ```
 
 Protected endpoint (profile):
-
 ```bash
 curl -H "Authorization: Bearer <jwt>" http://localhost:5000/api/profile
 ```
 
 Check-in:
-
 ```bash
 curl -X POST -H "Authorization: Bearer <jwt>" http://localhost:5000/api/check-in
 ```
@@ -256,12 +241,11 @@ curl -X POST -H "Authorization: Bearer <jwt>" http://localhost:5000/api/check-in
 ### Error Shape
 
 Non-success responses share a consistent structure:
-
 ```json
 {
-  "success": false,
-  "message": "Human readable summary",
-  "details": []
+	"success": false,
+	"message": "Human readable summary",
+	"details": []
 }
 ```
 
@@ -271,32 +255,32 @@ Swagger UI is mounted at `/docs` (root, not under `/api`). Definition generated 
 
 ## Environment Variable Reference
 
-| Variable                    | Required | Default               | Notes                              |
-| --------------------------- | -------- | --------------------- | ---------------------------------- |
-| `MONGO_URI`                 | Yes      | -                     | MongoDB connection string          |
-| `JWT_SECRET`                | Yes      | -                     | Strong random hex string           |
-| `REDIS_URL`                 | Yes      | -                     | Redis hostname/IP                  |
-| `REDIS_PORT`                | Yes      | 6379                  | Redis port                         |
-| `PORT`                      | No       | 5000                  | HTTP server port                   |
-| `JWT_EXPIRY_HOURS`          | No       | 6                     | JWT lifetime in hours              |
-| `JWT_EXPIRY_DAYS`           | Legacy   | -                     | Converted to hours if present      |
-| `CORS_ORIGIN`               | No       | http://localhost:5173 | Allowed origin for browser clients |
-| `TON_NETWORK`               | No       | mainnet               | TON network selection              |
-| `RATE_LIMIT_WINDOW_SECONDS` | No       | 900                   | Rate limit window length           |
-| `RATE_LIMIT_MAX_AUTH`       | No       | 20                    | Auth attempts per window           |
-| `RATE_LIMIT_MAX_NONCE`      | No       | 30                    | Nonce requests per window          |
-| `REDIS_USERNAME`            | No       | -                     | If Redis ACLs enabled              |
-| `REDIS_PASSWORD`            | No       | -                     | If Redis auth enabled              |
+| Variable | Required | Default | Notes |
+| -------- | -------- | ------- | ----- |
+| `MONGO_URI` | Yes | - | MongoDB connection string |
+| `JWT_SECRET` | Yes | - | Strong random hex string |
+| `REDIS_URL` | Yes | - | Redis hostname/IP |
+| `REDIS_PORT` | Yes | 6379 | Redis port |
+| `PORT` | No | 5000 | HTTP server port |
+| `JWT_EXPIRY_HOURS` | No | 6 | JWT lifetime in hours |
+| `JWT_EXPIRY_DAYS` | Legacy | - | Converted to hours if present |
+| `CORS_ORIGIN` | No | http://localhost:5173 | Allowed origin for browser clients |
+| `TON_NETWORK` | No | mainnet | TON network selection |
+| `RATE_LIMIT_WINDOW_SECONDS` | No | 900 | Rate limit window length |
+| `RATE_LIMIT_MAX_AUTH` | No | 20 | Auth attempts per window |
+| `RATE_LIMIT_MAX_NONCE` | No | 30 | Nonce requests per window |
+| `REDIS_USERNAME` | No | - | If Redis ACLs enabled |
+| `REDIS_PASSWORD` | No | - | If Redis auth enabled |
 
 ## Troubleshooting
 
-| Issue                          | Symptom                       | Fix                                                     |
-| ------------------------------ | ----------------------------- | ------------------------------------------------------- |
-| Missing env var                | Startup aborts with assertion | Ensure `.env` contains required keys                    |
-| Redis unreachable              | Logs show connection errors   | Verify `REDIS_URL`/`REDIS_PORT` or compose service name |
-| Rate limit blocked             | 429 + retryAfterSeconds       | Wait specified seconds or adjust env vars               |
-| JWT expired                    | 401 on protected routes       | Re-authenticate via nonce + auth flow                   |
-| Docker build fails on lockfile | `pnpm-lock.yaml` not found    | Remove it from `.dockerignore`                          |
+| Issue | Symptom | Fix |
+| ----- | ------- | ---- |
+| Missing env var | Startup aborts with assertion | Ensure `.env` contains required keys |
+| Redis unreachable | Logs show connection errors | Verify `REDIS_URL`/`REDIS_PORT` or compose service name |
+| Rate limit blocked | 429 + retryAfterSeconds | Wait specified seconds or adjust env vars |
+| JWT expired | 401 on protected routes | Re-authenticate via nonce + auth flow |
+| Docker build fails on lockfile | `pnpm-lock.yaml` not found | Remove it from `.dockerignore` |
 
 ## Security Considerations
 
@@ -314,7 +298,6 @@ Swagger UI is mounted at `/docs` (root, not under `/api`). Definition generated 
 ## Changelog
 
 v1.0.1
-
 - Added comprehensive README (setup, API usage, env reference)
 - Optimized Dockerfile for production (install prod deps only, non-root user)
 - Ensured lockfile retained for reproducible builds

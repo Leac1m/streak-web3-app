@@ -1,6 +1,6 @@
 import { Link, NavLink } from "react-router";
-import { TonConnectButton } from '@tonconnect/ui-react';
 import { useAuth } from "../providers/AuthProvider";
+import { ConnectButton } from "@mysten/dapp-kit";
 
 
 export default function NavBar() {
@@ -13,7 +13,7 @@ export default function NavBar() {
     <header className="fixed top-0 inset-x-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:bg-gray-950/80 dark:border-gray-800">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="font-semibold text-lg">
-          TON Streak
+          Web3 Streak
         </Link>
         <nav className="flex items-center gap-1">
           <NavLink
@@ -49,7 +49,7 @@ export default function NavBar() {
               Logout
             </button>
           )}
-          <TonConnectButton />
+          <ConnectButton />
         </nav>
       </div>
     </header>
