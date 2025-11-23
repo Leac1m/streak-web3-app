@@ -17,6 +17,8 @@ import {
   useWallets,
 } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
+
 
 const queryClient = new QueryClient();
 
@@ -104,10 +106,12 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
         walletAddress,
       });
 
+
       // 2) Ask user to sign the nonce
       const signature = await signPersonalMessage({
         message: new TextEncoder().encode(nonce),
       });
+
 
       // 3) Submit auth
       const result = await api.post<{ token: string; user: UserProfile }>(

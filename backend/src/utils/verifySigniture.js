@@ -1,18 +1,33 @@
-// import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
+import { toBase64 } from '@mysten/sui/utils'
 
-// const keypair = new Ed25519Keypair();
-// const message = new TextEncoder().encode('hello world');
-// const { signature } = await keypair.signPersonalMessage(message);
+import { parseSerializedSignature } from '@mysten/sui/cryptography';
 
-async function verifySignature(message, signature, walletAddress) {
-  const publicKey = await verifyPersonalMessageSignature(message, signature);
   
-  if (!publicKey.verifyAddress(walletAddress)) {
-    return false;
-  }
+ // const keypair = new Ed25519Keypair();
+ //  const test = await keypair.signPersonalMessage(message);
+ //    console.log("signature", test);
 
-  return true;
+async function verifySignature(nouce, signature, walletAddress) {
+  try {
+    const message = new TextEncoder().encode(nouce);
+    const parsed = parseSerializedSignature(signature);
+    
+    const userSignature = toBase64(parsed.zkLogin.userSignature);
+   
+    console.log("parsed", parsed);
+    const publicKey = await verifyPersonalMessageSignature(message, userSignature);
+      
+      // if (!publicKey.verifyAddress(walletAddress)) {
+      //   return false;
+      // }
+      return true;
+      
+  } catch(error) {
+    console.log("Error", error);
+     return false;
+  }
 }
 
 export default verifySignature;

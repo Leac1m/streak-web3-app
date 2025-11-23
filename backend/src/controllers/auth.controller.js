@@ -2,14 +2,13 @@ import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { badRequest, unauthorized } from "../utils/ApiError.js";
-import { verifySignature } from "@mysten/sui/verify";
 
-// import verifySignature from "../utils/verifySigniture.js";
+import verifySignature from "../utils/verifySigniture.js";
 
 export const authController = async (req, res) => {
   try {
-    const { walletAddress, signature, nonce } = req.body;
-
+    const { walletAddress, signature, nonce, message } = req.body;
+    console.log("walletAddress", walletAddress, "signature", signature, "nonce", nonce, "message", message);
     // Fetch nonce from Redis
     const redisNonce = await global.redis.get(`nonce:${walletAddress}`);
     if (!redisNonce) {
@@ -22,14 +21,11 @@ export const authController = async (req, res) => {
 
 
     // Verify SUI signature
-    // const isValid = await verifySignature(nonce, signature.signature, walletAddress); // for testing
-    await verifySignature(signature.bytes, signature.signature, { address: walletAddress }).catch(()=> {
-      throw unauthorized("Invalid signature.");
-    })
+    const isValid = await verifySignature(nonce, signature.signature, walletAddress); // for testing
 
-    // if (!publicKey) {
-    //   throw unauthorized("Invalid signature.");
-    // }
+    if (!isValid) {
+      throw unauthorized("Invalid signature.");
+    }
 
     // Delete nonce after use to prevent replay
     await global.redis.del(`nonce:${walletAddress}`);
