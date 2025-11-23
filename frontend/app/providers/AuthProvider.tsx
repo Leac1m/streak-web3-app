@@ -18,7 +18,6 @@ import {
 } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-
 const queryClient = new QueryClient();
 
 import { api, getToken, setToken } from "../lib/api";
@@ -65,7 +64,9 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
   const connectWallet = useCallback(async () => {
     if (currentWallet) return;
     if (!wallets.length) {
-      throw new Error("No Sui wallets detected. Please install a compatible wallet.");
+      throw new Error(
+        "No Sui wallets detected. Please install a compatible wallet."
+      );
     }
 
     if (wallets.length === 1) {
@@ -73,7 +74,9 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    throw new Error("Multiple wallets available. Use the Connect button to choose one.");
+    throw new Error(
+      "Multiple wallets available. Use the Connect button to choose one."
+    );
   }, [connect, currentWallet, wallets]);
 
   const disconnectWallet = useCallback(() => {
@@ -117,12 +120,10 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
         walletAddress,
       });
 
-
       // 2) Ask user to sign the nonce
       const signature = await signPersonalMessage({
         message: new TextEncoder().encode(nonce),
       });
-
 
       // 3) Submit auth
       const result = await api.post<{ token: string; user: UserProfile }>(

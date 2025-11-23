@@ -6,7 +6,8 @@ import { useAuth } from "../providers/AuthProvider";
 export const meta = () => [{ title: "Wallet Login • Streak" }];
 
 export default function Login() {
-  const { walletAddress, token, connectWallet, authenticate, loading } = useAuth();
+  const { walletAddress, token, connectWallet, authenticate, loading } =
+    useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
@@ -24,17 +25,38 @@ export default function Login() {
     <section className="grid gap-8 lg:grid-cols-[1fr,0.85fr]">
       <div className="space-y-6">
         <header className="space-y-2">
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Authenticate your wallet</h1>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+            Authenticate your wallet
+          </h1>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            A secure nonce challenge keeps your streak tied to your address without ever requesting the private key.
+            A secure nonce challenge keeps your streak tied to your address
+            without ever requesting the private key.
           </p>
         </header>
 
         <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
           <dl className="grid gap-4 text-sm">
-            <DetailRow label="Wallet address" value={walletAddress ? shortAddress(walletAddress) : "Not connected"} mono />
-            <DetailRow label="Status" value={token ? "Authenticated" : walletAddress ? "Wallet connected" : "Awaiting connection"} />
-            <DetailRow label="Next step" value={nextStepText({ token, walletAddress })} />
+            <DetailRow
+              label="Wallet address"
+              value={
+                walletAddress ? shortAddress(walletAddress) : "Not connected"
+              }
+              mono
+            />
+            <DetailRow
+              label="Status"
+              value={
+                token
+                  ? "Authenticated"
+                  : walletAddress
+                  ? "Wallet connected"
+                  : "Awaiting connection"
+              }
+            />
+            <DetailRow
+              label="Next step"
+              value={nextStepText({ token, walletAddress })}
+            />
           </dl>
           <div className="mt-6 space-y-3">
             {!walletAddress && (
@@ -42,7 +64,9 @@ export default function Login() {
                 type="button"
                 onClick={() =>
                   void connectWallet().catch((e: unknown) =>
-                    setError((e as Error)?.message ?? "Unable to connect wallet."),
+                    setError(
+                      (e as Error)?.message ?? "Unable to connect wallet."
+                    )
                   )
                 }
                 className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-105"
@@ -69,16 +93,23 @@ export default function Login() {
                 Go to dashboard
               </button>
             )}
-            {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
+            {error && (
+              <p className="text-sm text-rose-600 dark:text-rose-400">
+                {error}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       <aside className="space-y-6">
         <article className="rounded-3xl border border-slate-200 bg-white/80 p-6 text-sm shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Need a wallet selector?</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            Need a wallet selector?
+          </h2>
           <p className="mt-3 text-slate-600 dark:text-slate-300">
-            Use the universal connect button to pick from any supported Sui wallet. Once connected, return here to finish authentication.
+            Use the universal connect button to pick from any supported Sui
+            wallet. Once connected, return here to finish authentication.
           </p>
           <div className="mt-4 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
             <ConnectButton className="w-full" />
@@ -90,7 +121,10 @@ export default function Login() {
           <ol className="mt-4 space-y-3 list-decimal list-inside text-slate-200">
             <li>Connect your wallet and authorise read-only access.</li>
             <li>Request a nonce. We store it in Redis with a short TTL.</li>
-            <li>Sign the nonce using a personal message and send it back to obtain your JWT.</li>
+            <li>
+              Sign the nonce using a personal message and send it back to obtain
+              your JWT.
+            </li>
           </ol>
         </article>
       </aside>
@@ -109,8 +143,16 @@ function DetailRow({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</span>
-      <span className={`${mono ? "font-mono" : ""} text-sm font-semibold text-slate-900 dark:text-white`}>{value}</span>
+      <span className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {label}
+      </span>
+      <span
+        className={`${
+          mono ? "font-mono" : ""
+        } text-sm font-semibold text-slate-900 dark:text-white`}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -119,7 +161,13 @@ function shortAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-function nextStepText({ token, walletAddress }: { token: string | null; walletAddress: string | null | undefined }) {
+function nextStepText({
+  token,
+  walletAddress,
+}: {
+  token: string | null;
+  walletAddress: string | null | undefined;
+}) {
   if (token) return "You're authenticated—jump into the dashboard.";
   if (walletAddress) return "Sign the nonce challenge to receive your JWT.";
   return "Connect a supported Sui wallet to begin.";
