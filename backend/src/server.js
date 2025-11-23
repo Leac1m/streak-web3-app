@@ -7,7 +7,7 @@ import { swaggerServe, swaggerUiMiddleware } from "./swagger.js";
 
 const PORT = env.port;
 
-app.use("/docs", swaggerServe, swaggerUiMiddleware);
+app.use("/", swaggerServe, swaggerUiMiddleware);
 
 (async () => {
   try {
