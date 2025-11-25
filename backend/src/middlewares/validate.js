@@ -11,7 +11,7 @@ export const validate = (schemas) => (req, _res, next) => {
         if (error) {
           throw badRequest('Validation failed', error.details.map(d => ({ message: d.message, path: d.path })));
         }
-        req[src] = value; // sanitized
+        Object.assign(req[src], value); // sanitized
       }
     }
     next();
