@@ -20,7 +20,13 @@ export const generateNonceController = async (req, res) => {
     await global.redis.set(`nonce:${walletAddress}`, nonce, { EX: 300 });
     await global.redis.set(`nonce_ts:${walletAddress}`, now, { EX: 300 });
 
-    return res.status(200).json({ success: true, nonce });
+    const message = [
+      "Streak authentication request.",
+      "Signing this message proves wallet ownership without initiating a blockchain transaction.",
+      `Nonce: ${nonce}`,
+    ].join("\n");
+
+    return res.status(200).json({ success: true, nonce, message });
   } catch (err) {
     console.error("Nonce generation error:", err);
     return res.status(500).json({ success: false, message: "Failed to generate nonce." });

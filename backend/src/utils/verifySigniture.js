@@ -9,9 +9,9 @@ import { parseSerializedSignature } from '@mysten/sui/cryptography';
  //  const test = await keypair.signPersonalMessage(message);
  //    console.log("signature", test);
 
-async function verifySignature(nouce, signature, walletAddress) {
+async function verifySignature(messageText, signature, walletAddress) {
   try {
-    const message = new TextEncoder().encode(nouce);
+    const message = new TextEncoder().encode(messageText);
     const parsed = parseSerializedSignature(signature);
     
     const userSignature = toBase64(parsed.zkLogin.userSignature);

@@ -19,9 +19,12 @@ export const authController = async (req, res) => {
       throw badRequest("Invalid nonce.");
     }
 
+    if (!message || !message.trim().endsWith(`Nonce: ${nonce}`)) {
+      throw badRequest("Invalid auth message.");
+    }
 
     // Verify SUI signature
-    const isValid = await verifySignature(nonce, signature.signature, walletAddress); // for testing
+    const isValid = await verifySignature(message, signature.signature, walletAddress);
 
     if (!isValid) {
       throw unauthorized("Invalid signature.");
