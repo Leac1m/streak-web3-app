@@ -1,7 +1,7 @@
 import { env } from "../../src/config/env";
 
-const TOKEN_KEY = "token";
-const TOKEN_EXP_KEY = "token_exp";
+const TOKEN_KEY = "token:v2";
+const TOKEN_EXP_KEY = "token_exp:v2";
 const TOKEN_SKEW_MS = 30_000;
 
 type TokenState = {
