@@ -123,6 +123,7 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         logout();
+        return;
       }
       throw error;
     } finally {
@@ -135,12 +136,12 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       // 1) Request server nonce
-      const { nonce, message } = await api.post<{ nonce: string; message: string }>(
-        "/auth/nonce",
-        {
-          walletAddress,
-        }
-      );
+      const { nonce, message } = await api.post<{
+        nonce: string;
+        message: string;
+      }>("/auth/nonce", {
+        walletAddress,
+      });
 
       // 2) Ask user to sign the nonce
       const signature = await signPersonalMessage({
@@ -237,7 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-        <WalletProvider autoConnect slushWallet={{ name: "streak"}} >
+        <WalletProvider autoConnect slushWallet={{ name: "streak" }}>
           <AuthInnerProvider>{children}</AuthInnerProvider>
         </WalletProvider>
       </SuiClientProvider>

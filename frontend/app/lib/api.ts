@@ -52,6 +52,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(`${env.VITE_API_BASE}${path}`, { ...init, headers });
+  if (res.status === 401) {
+    setToken(null);
+    throw new TokenExpiredError();
+  }
+
   if (!res.ok) {
     const msg = await safeJson(res);
     throw new Error(msg?.message || `Request failed: ${res.status}`);
