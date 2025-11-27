@@ -20,7 +20,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
 
-import { api, getToken, setToken } from "../lib/api";
+import {
+  api,
+  getToken,
+  getTokenExpiry,
+  setToken,
+  TokenExpiredError,
+} from "../lib/api";
 import networkConfig from "src/config/networkConfig";
 
 // Types
@@ -48,7 +54,9 @@ export type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function AuthInnerProvider({ children }: { children: React.ReactNode }) {
-  const [token, setTokenState] = useState<string | null>(() => getToken());
+  const [token, setTokenState] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : getToken()
+  );
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -83,11 +91,11 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     disconnect();
   }, [disconnect]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null);
     setTokenState(null);
     setUser(null);
-  };
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     if (!token) return;
@@ -95,10 +103,16 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await api.get<UserProfile>("/profile");
       setUser(data);
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        logout();
+        return;
+      }
+      throw error;
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, logout]);
 
   const checkIn = useCallback(async () => {
     if (!token) throw new Error("Not authenticated");
@@ -106,10 +120,15 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.post<{ message: string }>("/check-in");
       await refreshProfile();
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        logout();
+      }
+      throw error;
     } finally {
       setLoading(false);
     }
-  }, [token, refreshProfile]);
+  }, [token, refreshProfile, logout]);
 
   const authenticate = useCallback(async () => {
     if (!walletAddress) throw new Error("Connect wallet first");
@@ -145,11 +164,40 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (token) {
-      void refreshProfile();
+      refreshProfile().catch((error) => {
+        if (error instanceof TokenExpiredError) return;
+        console.error("Failed to refresh profile", error);
+      });
     } else {
       setUser(null);
     }
   }, [token, refreshProfile]);
+
+  useEffect(() => {
+    if (!walletAddress && (token || user)) {
+      logout();
+    }
+  }, [walletAddress, token, user, logout]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!token) return;
+
+    const expiresAt = getTokenExpiry();
+    if (!expiresAt) return;
+
+    const now = Date.now();
+    if (expiresAt <= now) {
+      logout();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      logout();
+    }, expiresAt - now);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [token, logout]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
