@@ -135,13 +135,16 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       // 1) Request server nonce
-      const { nonce } = await api.post<{ nonce: string }>("/auth/nonce", {
-        walletAddress,
-      });
+      const { nonce, message } = await api.post<{ nonce: string; message: string }>(
+        "/auth/nonce",
+        {
+          walletAddress,
+        }
+      );
 
       // 2) Ask user to sign the nonce
       const signature = await signPersonalMessage({
-        message: new TextEncoder().encode(nonce),
+        message: new TextEncoder().encode(message),
       });
 
       // 3) Submit auth
@@ -151,6 +154,7 @@ function AuthInnerProvider({ children }: { children: React.ReactNode }) {
           walletAddress,
           signature,
           nonce,
+          message,
         }
       );
 
